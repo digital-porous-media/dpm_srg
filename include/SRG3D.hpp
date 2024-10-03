@@ -1,5 +1,5 @@
-#ifndef SRG_HPP
-#define SRG_HPP
+#ifndef SRG3D_HPP
+#define SRG3D_HPP
 
 #include <iostream>
 #include <vector>
@@ -8,72 +8,51 @@
 #include <algorithm>
 #include <numeric>
 #include <limits>
+#include "SRG.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
 namespace py = pybind11;
 
-// Struct to hold information about labeled regions
-struct RegionInfo3D
-{
-    int voxelCount;
-    double meanIntensity;
-
-    RegionInfo3D() : voxelCount(0), meanIntensity(0.0) {}
-
-    void addValue(double value)
-    {
-        voxelCount++;
-        meanIntensity += (value - meanIntensity) / voxelCount;
-    }
-
-    double getMean() const
-    {
-        return meanIntensity;
-    }
-};
-
-class SRG
+template <typename T>
+class SRG3D : public SRG<T, 3>
 {
 public:
-    SRG(const py::array_t<uint16_t> &img, const py::array_t<uint8_t> &seeds);
-    ~SRG() {}
+    SRG3D(const py::array_t<T> &image, const py::array_t<uint8_t> &seeds);
+    ~SRG3D() {}
 
-    void segment();
-
-    py::array_t<int> getSegmentation() const;
+    py::array_t<int> getSegmentation() const override;
 
 private:
-    py::array_t<uint8_t> img;
-    py::array_t<uint8_t> seeds;
+    // const py::array_t<T> image;
+    const T *img_ptr;
+    const uint8_t *seeds_ptr;
+    // const py::array_t<uint8_t> seeds;
+    const int width, height, depth;
+
     std::vector<std::vector<std::vector<int>>> labels;
     std::vector<std::tuple<int, int, int>> seedPoints;
-    std::vector<RegionInfo3D> regionInfos;
+    std::vector<RegionInfo> regionInfos;
 
     std::queue<std::tuple<int, int, int>> pointQueue;
 
-    int width, height, depth;
-
     const std::vector<std::tuple<int, int, int>> neighbors = {
         {-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}};
-    // 26-Connected is much slower and not very beneficial.
-    // {-1, -1, -1}, {-1, 0, -1}, {-1, 1, -1}, {0, -1, -1}, {0, 1, -1}, {1, -1, -1},
-    // {1, 0, -1}, {1, 1, -1}, {-1, -1, 0}, {1, -1, 0}, {-1, 1, 0}, {1, 1, 0},
-    // {-1, -1, 1}, {-1, 0, 1}, {-1, 1, 1}, {0, -1, 1}, {0, 1, 1}, {1, -1, 1}, {1, 0, 1}, {1, 1, 1}
 
-    void initialize();
+    void initialize() override;
 
-    void processSeeds();
+    void processSeeds() override;
 
     bool isWithinBounds(int x, int y, int z);
 };
 
-SRG::SRG(const py::array_t<uint16_t> &img, const py::array_t<uint8_t> &seeds)
-    : img(img), seeds(seeds), width(img.shape(2)), height(img.shape(1)), depth(img.shape(0))
+template <typename T>
+SRG3D<T>::SRG3D(const py::array_t<T> &image, const py::array_t<uint8_t> &seeds)
+    : width(image.shape(2)), height(image.shape(1)), depth(image.shape(0))
 {
     // Access pointer to np array
-    py::buffer_info buf = img.request();
+    py::buffer_info buf = image.request();
 
     if (buf.ndim != 3)
     {
@@ -82,42 +61,59 @@ SRG::SRG(const py::array_t<uint16_t> &img, const py::array_t<uint8_t> &seeds)
     }
 
     // Ensure the data type is correct
-    if (buf.itemsize != sizeof(uint16_t))
+    if (buf.itemsize != sizeof(T))
     {
         std::cerr << "Expected int data type, but got item size: " << buf.itemsize << std::endl;
         throw std::runtime_error("Error: Incorrect data type"); // Handle the error accordingly
     }
+
+    img_ptr = static_cast<const T *>(buf.ptr);
+
+    if (!img_ptr)
+    {
+        std::cerr << "img_ptr is null!" << std::endl;
+        throw std::runtime_error("Error: img_ptr is null!"); // or handle the error appropriately
+    }
+
+    seeds_ptr = static_cast<const uint8_t *>(seeds.request().ptr);
+
+    if (!seeds_ptr)
+    {
+        std::cerr << "seeds_ptr is null!" << std::endl;
+        throw std::runtime_error("Error: seeds_ptr is null!"); // or handle the error appropriately
+    }
 }
 
-void SRG::initialize()
+template <typename T>
+void SRG3D<T>::initialize()
 {
     // Initialize label image
     labels.resize(width, std::vector<std::vector<int>>(height, std::vector<int>(depth, -1)));
     regionInfos.resize(std::numeric_limits<uint8_t>::max());
 
     // Extract seed points
-    auto seedShape = seeds.shape();
-
-    for (int x = 0; x < seedShape[0]; ++x)
+    for (size_t x = 0; x < width; ++x)
     {
-        for (int y = 0; y < seedShape[1]; ++y)
+        for (size_t y = 0; y < height; ++y)
         {
-            for (int z = 0; z < seedShape[2]; ++z)
+            for (size_t z = 0; z < depth; ++z)
             {
-                uint8_t seedLabel = seeds.at<uint8_t>(x, y, z);
+                uint8_t seedLabel = seeds_ptr[x + y * width + z * width * height];
+
                 if (seedLabel != 0)
                 {
                     labels[x][y][z] = seedLabel; // Assign label
                     pointQueue.emplace(x, y, z);
                     // seedPoints.emplace_back(x, y, z); // Store seed point
-                    regionInfos[seedLabel].addValue(img.at<uint16_t>(x, y, z));
+                    regionInfos[seedLabel].addValue(img_ptr[x + y * width + z * width * height]);
                 }
             }
         }
     }
 }
 
-void SRG::processSeeds()
+template <typename T>
+void SRG3D<T>::processSeeds()
 {
     while (!pointQueue.empty())
     {
@@ -141,7 +137,7 @@ void SRG::processSeeds()
 
             if (isWithinBounds(nx, ny, nz) && labels[nx][ny][nz] == -1)
             {
-                double neighborValue = img.at<uint16_t>(nx, ny, nz);
+                double neighborValue = static_cast<double>(img_ptr[nx + ny * width + nz * height * width]);
                 double sigma = std::abs(neighborValue - currentRegionInfo.getMean());
 
                 if (sigma < minSigma)
@@ -161,7 +157,7 @@ void SRG::processSeeds()
             labels[best_neighbor_x][best_neighbor_y][best_neighbor_z] = mostSimilarRegionId;
 
             // Update region info
-            currentRegionInfo.addValue(img.at<uint16_t>(best_neighbor_x, best_neighbor_y, best_neighbor_z));
+            currentRegionInfo.addValue(img_ptr[best_neighbor_x + best_neighbor_y * width + best_neighbor_z * height * width]);
 
             // Add neighbors to the queue
             for (const auto &neighbor : neighbors)
@@ -182,20 +178,16 @@ void SRG::processSeeds()
     }
 }
 
-bool SRG::isWithinBounds(int x, int y, int z)
+template <typename T>
+bool SRG3D<T>::isWithinBounds(int x, int y, int z)
 {
     return (x >= 0 && x < width) &&
            (y >= 0 && y < height) &&
            (z >= 0 && z < depth);
 }
 
-void SRG::segment()
-{
-    initialize();
-    processSeeds();
-}
-
-py::array_t<int> SRG::getSegmentation() const
+template <typename T>
+py::array_t<int> SRG3D<T>::getSegmentation() const
 {
     py::array_t<int> segmented_image({depth, height, width});
 
@@ -208,7 +200,7 @@ py::array_t<int> SRG::getSegmentation() const
         {
             for (size_t k = 0; k < width; ++k)
             {
-                np_ptr[i * height * width + j * width + k] = labels[i][j][k];
+                np_ptr[i * height * width + j * width + k] = labels[k][j][i];
             }
         }
     }
