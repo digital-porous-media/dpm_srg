@@ -51,4 +51,4 @@ target_link_libraries(dpmsrg PRIVATE pybind11::module)
 
 # Create the Python module
 pybind11_add_module(dpm_srg dpm_srg/wrapper.cpp)
-install(SOURCE dpm_srg DESTINATION .)
+install(TARGETS dpm_srg DESTINATION .)
