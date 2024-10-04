@@ -45,9 +45,10 @@ find_package(pybind11 REQUIRED)
 
 include_directories(include/)
 # Add your source files and set up your target
-add_library(DPMSRG SHARED dpm_srg/wrapper.cpp)
-target_link_libraries(DPMSRG PRIVATE pybind11::module)
+add_library(dpmsrg SHARED dpm_srg/wrapper.cpp)
+target_link_libraries(dpmsrg PRIVATE pybind11::module)
 
 
 # Create the Python module
 pybind11_add_module(dpm_srg dpm_srg/wrapper.cpp)
+install(SOURCE dpm_srg DESTINATION .)
