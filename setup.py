@@ -1,11 +1,11 @@
-from setuptools import setup, Extension
+from setuptools import setup, find_packages
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension
 
 # Define your extension module
 ext_modules = [
     Pybind11Extension(
-        'dpm_srg',  # Name of the module
+        'dpm_srg',
         ['wrappers/wrapper.cpp'],
         include_dirs=[pybind11.get_include(), './include'],
         language='c++'
