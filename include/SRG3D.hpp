@@ -210,7 +210,7 @@ bool SRG3D<T>::isWithinBounds(int x, int y, int z)
 template <typename T>
 py::array_t<uint8_t> SRG3D<T>::getSegmentation() const
 {
-    py::array_t<uint8_t> segmented_image({depth, height, width});
+    py::array_t<uint8_t> segmented_image = py::array_t<uint8_t>({depth, height, width});
 
     uint8_t np_buf = segmented_image.request();
     uint8_t *np_ptr = static_cast<uint8_t *>(np_buf.ptr);
