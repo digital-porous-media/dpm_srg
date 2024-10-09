@@ -43,13 +43,13 @@ public:
     SRG2D(const py::array_t<T> &image, const py::array_t<uint8_t> &seeds);
     ~SRG2D() {}
 
-    py::array_t<int> getSegmentation() const override;
+    py::array_t<uint8_t> getSegmentation() const override;
 
 private:
     // const py::array_t<T> image;
     const T *img_ptr;
     const uint8_t *seeds_ptr;
-    const int width, height;
+    const uint16_t width, height;
 
     std::vector<std::vector<int>> labels;
     std::vector<std::tuple<int, int>> seedPoints;
@@ -197,18 +197,18 @@ bool SRG2D<T>::isWithinBounds(int x, int y)
 }
 
 template <typename T>
-py::array_t<int> SRG2D<T>::getSegmentation() const
+py::array_t<uint8_t> SRG2D<T>::getSegmentation() const
 {
-    py::array_t<int> segmented_image({height, width});
+    py::array_t<uint8_t> segmented_image({height, width});
 
-    auto np_buf = segmented_image.request();
-    int *np_ptr = static_cast<int *>(np_buf.ptr);
+    uint8_t np_buf = segmented_image.request();
+    uint8_t *np_ptr = static_cast<uint8_t *>(np_buf.ptr);
 
     for (size_t i = 0; i < height; ++i)
     {
         for (size_t j = 0; j < width; ++j)
         {
-            np_ptr[i * width + j] = labels[j][i];
+            np_ptr[i * width + j] = static_cast < uint8_t(labels[j][i]);
         }
     }
 

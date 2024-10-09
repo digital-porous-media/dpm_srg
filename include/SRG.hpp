@@ -63,7 +63,7 @@ public:
 
     virtual void segment();
 
-    virtual py::array_t<int> getSegmentation() const = 0;
+    virtual py::array_t<uint8_t> getSegmentation() const = 0;
 
 protected:
     std::vector<RegionInfo> regionInfos;

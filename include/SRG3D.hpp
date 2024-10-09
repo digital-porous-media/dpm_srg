@@ -43,14 +43,14 @@ public:
     SRG3D(const py::array_t<T> &image, const py::array_t<uint8_t> &seeds);
     ~SRG3D() {}
 
-    py::array_t<int> getSegmentation() const override;
+    py::array_t<uint8_t> getSegmentation() const override;
 
 private:
     // const py::array_t<T> image;
     const T *img_ptr;
     const uint8_t *seeds_ptr;
     // const py::array_t<uint8_t> seeds;
-    const int width, height, depth;
+    const uint16_t width, height, depth;
 
     std::vector<std::vector<std::vector<int>>> labels;
     std::vector<std::tuple<int, int, int>> seedPoints;
@@ -208,12 +208,12 @@ bool SRG3D<T>::isWithinBounds(int x, int y, int z)
 }
 
 template <typename T>
-py::array_t<int> SRG3D<T>::getSegmentation() const
+py::array_t<uint8_t> SRG3D<T>::getSegmentation() const
 {
-    py::array_t<int> segmented_image({depth, height, width});
+    py::array_t<uint8_t> segmented_image({depth, height, width});
 
-    auto np_buf = segmented_image.request();
-    int *np_ptr = static_cast<int *>(np_buf.ptr);
+    uint8_t np_buf = segmented_image.request();
+    uint8_t *np_ptr = static_cast<uint8_t *>(np_buf.ptr);
 
     for (size_t i = 0; i < depth; ++i)
     {
@@ -221,7 +221,7 @@ py::array_t<int> SRG3D<T>::getSegmentation() const
         {
             for (size_t k = 0; k < width; ++k)
             {
-                np_ptr[i * height * width + j * width + k] = labels[k][j][i];
+                np_ptr[i * height * width + j * width + k] = static_cast<uint8_t>(labels[k][j][i]);
             }
         }
     }

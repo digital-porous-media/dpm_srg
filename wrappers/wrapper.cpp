@@ -37,7 +37,7 @@ void wrap_srg3d(py::module &m, const std::string &suffix)
         .def(py::init<const py::array_t<T> &, const py::array_t<uint8_t> &>(),
              py::arg("image"), py::arg("seeds"))
         .def("segment", &SRG3D<T>::segment)
-        .def("get_result", &SRG3D<T>::getSegmentation);
+        .def("get_result", &SRG3D<uint8_t>::getSegmentation);
 }
 
 template <typename T>
@@ -48,7 +48,7 @@ void wrap_srg2d(py::module &m, const std::string &suffix)
         .def(py::init<const py::array_t<T> &, const py::array_t<uint8_t> &>(),
              py::arg("image"), py::arg("seeds"))
         .def("segment", &SRG2D<T>::segment)
-        .def("get_result", &SRG2D<T>::getSegmentation);
+        .def("get_result", &SRG2D<uint8_t>::getSegmentation);
 }
 
 PYBIND11_MODULE(dpm_srg, m)
