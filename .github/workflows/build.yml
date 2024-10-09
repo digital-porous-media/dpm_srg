@@ -35,6 +35,8 @@ jobs:
         env:
           CIBW_BUILD: cp3*
           CXXFLAGS: "-std=c++17"
+          CIBW_ENV: |
+            CXXFLAGS=/std:c++17
 
       - name: Upload to PyPI
         env:
