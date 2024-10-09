@@ -8,7 +8,8 @@ ext_modules = [
         'dpm_srg',
         ['wrappers/wrapper.cpp'],
         include_dirs=[pybind11.get_include(), './include'],
-        language='c++'
+        language='c++',
+        extra_compile_args=["-std=c++17"]
     ),
 ]
 
