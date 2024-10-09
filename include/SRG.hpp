@@ -42,8 +42,8 @@ struct RegionInfo
     double meanIntensity;
 
     RegionInfo() : voxelCount(0), meanIntensity(0.0) {}
-
-    void addValue(auto value)
+    template <typename T>
+    void addValue(T value)
     {
         voxelCount++;
         meanIntensity += (static_cast<double>(value) - meanIntensity) / voxelCount;
