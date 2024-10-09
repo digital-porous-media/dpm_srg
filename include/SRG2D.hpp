@@ -200,7 +200,7 @@ template <typename T>
 py::array_t<uint8_t> SRG2D<T>::getSegmentation() const
 {
     py::array_t<uint8_t> segmented_image = py::array_t<uint8_t>({height, width});
-    pybind11::buffer_info np_buf = segmented_image.request();
+    py::buffer_info np_buf = segmented_image.request();
     uint8_t *np_ptr = static_cast<uint8_t *>(np_buf.ptr);
 
     for (size_t i = 0; i < height; ++i)
