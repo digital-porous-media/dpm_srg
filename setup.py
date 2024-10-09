@@ -1,6 +1,12 @@
 from setuptools import setup, find_packages
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension
+import sys
+
+if sys.platform == "win32":
+    extra_compile_args = ["/std:c++17"]
+else:
+    extra_compile_args = ["-std=c++17"]
 
 # Define your extension module
 ext_modules = [
@@ -9,7 +15,7 @@ ext_modules = [
         ['wrappers/wrapper.cpp'],
         include_dirs=[pybind11.get_include(), './include'],
         language='c++',
-        extra_compile_args=["-std=c++17"]
+        extra_compile_args=extra_compile_args
     ),
 ]
 
