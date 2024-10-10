@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dpm_srg"
 version = "0.0.3"
 description = "Seeded Region Growing Segmentation"
+readme = "README.md"
 authors = [{ name = "Digital Porous Media", email = "bcchang@utexas.edu" }]
 requires-python = ">=3.8"
 license = { text = "GNU Lesser General Public License v3 (LGPLv3)" }
