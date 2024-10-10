@@ -1,20 +1,19 @@
 name: Build and Deploy DPM_SRG
 
 on:
-  workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  # pull_request:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest] # macos-latest,
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.12']
 
     steps:
