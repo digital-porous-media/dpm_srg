@@ -31,12 +31,18 @@ jobs:
       - name: Set CXXFLAGS
         id: set_flags
         run: echo "CXXFLAGS=${{ matrix.os == 'windows-latest' && '/std:c++17' || '-std=c++17' }}" >> $GITHUB_ENV
-     
+      
+      - name: Enable QEMU for aarch64
+        if: startsWith(matrix.os, 'ubuntu')
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
       - name: Build the wheel
         run: 
           python -m cibuildwheel --output-dir dist
         env:
-          CIBW_BUILD: cp3* # cp38-* cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*
+          CIBW_BUILD: cp3*
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CXXFLAGS: ${{ env.CXXFLAGS }}
