@@ -22,7 +22,7 @@ ext_modules = [
 
 setup(
     name='dpm_srg',
-    version='0.0.3',
+    version='0.0.4',
     author='Digital Porous Media',
     author_email='bcchang@utexas.edu',
     description='Seeded Region Growing Segmentation',
